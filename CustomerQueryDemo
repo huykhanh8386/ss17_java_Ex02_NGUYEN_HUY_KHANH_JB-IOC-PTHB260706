@@ -1,0 +1,46 @@
+package Ex02;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+public class CustomerQueryDemo {
+    public static void main(String[] args) {
+        List<Customer> customers = new ArrayList<>();
+        String sql = """
+                SELECT *
+                FROM customers
+                WHERE loyalty_points >= 500
+                ORDER BY loyalty_points DESC
+                """;
+        try (
+                Connection con = ConnectDB.openConnection();
+                Statement stmt = con.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)
+        ) {
+            while (rs.next()) {
+                int id = rs.getInt("customer_id");
+                String fullName = rs.getString("full_name");
+                String email = rs.getString("email");
+                int points = rs.getInt("loyalty_points");
+                boolean active = rs.getBoolean("is_active");
+                Customer customer = new Customer(id, fullName, email, points, active);
+                customers.add(customer);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("       DANH SÁCH KHÁCH HÀNG VIP (ĐIỂM TÍCH LŨY >= 500) - RIKKEI STORE");
+        System.out.printf("%-5s | %-22s | %-30s | %-10s | %-12s%n", "ID", "HỌ VÀ TÊN", "EMAIL", "ĐIỂM", "TRẠNG THÁI");
+        for (Customer customer : customers) {
+            String status;
+            if (customer.isActive()) {
+                status = "Hoạt động";
+            } else {
+                status = "Ngừng hoạt động";
+            }
+            System.out.printf("%-5d | %-22s | %-30s | %-10d | %-12s%n", customer.getId(), customer.getName(), customer.getEmail(), customer.getLoyaltyPoints(), status);
+        }
+        System.out.println("Tổng số khách hàng VIP trong danh sách: " + customers.size());
+    }
+}
